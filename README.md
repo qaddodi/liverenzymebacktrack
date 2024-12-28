@@ -10,7 +10,7 @@ Key Features:
 *   **Date and Time Input:**  Specify when the current enzyme levels were measured.
 *   **Editable Half-Lives:**  Customize the half-lives of AST, ALT, and LDH, or use the default values.
 *   **Custom Time Steps:** Control how many time steps to go back, and how large each step is.
-*   **Transposed Table Output:**  View the historical enzyme estimates in a well organized table, with columns of Hours Ago, Date, Time, AST, ALT, and LDH
+*   **Table Output:**  View the historical enzyme estimates in a well organized table, with columns of Hours Ago, Date, Time, AST, ALT, and LDH
 *   **Responsive Design:**  The tool is designed to be usable on various screen sizes.
 *   **Collapsible Settings:** The default parameters for time and half life can be toggled.
 
