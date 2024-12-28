@@ -8,8 +8,8 @@
         body {
             font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             margin: 20px;
-            background-color: #f5f8fa; /* Light background */
-            color: #34495e; /* Darker text */
+            background-color: #f5f8fa;
+            color: #34495e;
             line-height: 1.6;
             padding: 10px;
             display: flex;
@@ -19,8 +19,8 @@
 
         h1 {
             text-align: center;
-             color: #2980b9; /* Primary color */
-             margin-bottom: 10px; /* Reduced the bottom margin */
+             color: #2980b9;
+             margin-bottom: 10px;
             font-size: 2.2em;
             font-weight: 600;
             letter-spacing: 0.5px;
@@ -33,12 +33,35 @@
 
          h2 {
             text-align: center;
-            font-size: 0.8em; /* Slightly smaller author name */
-            color: #999; /* gray color */
+            font-size: 0.8em;
+            color: #999;
             font-style: italic;
             margin-top: 0px;
             margin-bottom: 10px;
          }
+
+        /* Styles for the Guide button and container */
+        .guide-container {
+            width: 90%;
+            max-width: 700px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+
+         .guide-container .collapsible {
+             width: 100%;
+             margin: 0px;
+             display: block;
+             text-align: center; /* Center the text in the guide button */
+          }
+
+          .guide-container .content {
+              width: 100%;
+          }
+
 
          .form-container {
             width: 90%;
@@ -65,6 +88,15 @@
             text-align: left;
             font-weight: 500;
          }
+        /*Center labels in input groups*/
+         .input-group:not(.current-levels-container .input-group) label {
+            text-align: center;
+         }
+
+         /*Ensure all inputs within the optional input group get centered labels */
+         .collapsible + .content .input-group label{
+              text-align: center;
+          }
 
         .input-group input[type="number"],
         .input-group input[type="datetime-local"] {
@@ -84,11 +116,31 @@
                outline: none;
            }
 
+           /* New container for current levels */
+        .current-levels-container {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: space-between; /* Distribute space evenly */
+          gap: 15px; /* Spacing between groups */
+          margin-bottom: 10px; /* Space below the group of current level inputs */
+        }
+
+        .current-levels-container .input-group {
+            flex: 1; /* each input expands to take equal space */
+            min-width: 20%; /* Prevent them from being too narrow on smaller screens */
+            margin-bottom: 0; /* prevent extra spacing below individual inputs*/
+        }
+
+       .current-levels-container label {
+            text-align: center;
+            margin-bottom: 5px; /* reduce the margin below the text */
+        }
+
         button {
             display: block;
             width: 100%;
             padding: 14px;
-             background-color: #3498db; /* Button color */
+             background-color: #3498db;
             color: white;
             border: none;
             border-radius: 10px;
@@ -100,7 +152,7 @@
         }
 
          button:hover {
-            background-color: #2980b9; /* Button hover color */
+            background-color: #2980b9;
         }
 
         table {
@@ -108,13 +160,13 @@
              width: 98%;
             margin-top: 25px;
             background: white;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Enhanced shadow */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             border-radius: 12px;
-            overflow-x: auto; /* Allow horizontal scroll */
-             border: 1px solid #ecf0f1; /* Added overall border */
+            overflow-x: auto;
+             border: 1px solid #ecf0f1;
             margin-left: auto;
             margin-right: auto;
-              display: block; /* Ensure table does not expand too much */
+              display: block;
 
         }
 
@@ -125,12 +177,12 @@
             text-align: center;
             font-size: 0.95em;
             transition: all 0.2s ease;
-             white-space: nowrap; /* Prevent cells from wrapping and forcing the table to get too wide*/
+             white-space: nowrap;
          }
 
         td {
             font-style: normal;
-            color: #34495e; /* Darker text color for body cells*/
+            color: #34495e;
         }
 
         tr:nth-child(2) td {
@@ -139,7 +191,7 @@
 
 
         th {
-            background-color: #f5f5f5; /* Slightly lighter for the header */
+            background-color: #f5f5f5;
             font-weight: 600;
             color: #2c3e50;
             letter-spacing: 0.3px;
@@ -147,12 +199,12 @@
 
 
         tr:hover {
-            background-color: #f9f9f9; /* Subtle hover highlight */
+            background-color: #f9f9f9;
         }
 
 
         tr:last-child td {
-            border-bottom: none; /* Remove border for the last row */
+            border-bottom: none;
         }
 
 
@@ -166,7 +218,7 @@
             border-right: none;
         }
 
-        /*  Added a more prominent border on the top row*/
+
         thead tr {
             border-bottom: 2px solid #ddd;
         }
@@ -174,7 +226,7 @@
         th:first-child,
         td:first-child {
             text-align: left;
-            font-weight: bold; /* Added this line to bold the first column */
+            font-weight: bold;
         }
         .collapsible {
             background-color: #f0f0f0;
@@ -210,7 +262,7 @@
         }
 
         .active:after {
-            content: "\2212"; /* Minus sign */
+            content: "\2212";
         }
 
         .content {
@@ -221,7 +273,43 @@
             background-color: #f9f9f9;
              border: 1px solid #ddd;
              border-radius: 0 0 10px 10px;
+             margin-bottom: 10px;
         }
+
+         .content h1 {
+            font-size: 1.5em;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+            padding-bottom: 5px;
+        }
+
+         .content h2 {
+            font-size: 1.1em;
+            color: #555;
+            margin-top: 15px;
+             margin-bottom: 10px;
+            text-align: left;
+        }
+
+         .content p {
+            font-size: 1em;
+            color: #34495e;
+            margin-bottom: 10px;
+            text-align: left;
+         }
+
+         .content ul{
+            margin-bottom: 10px;
+             padding-left: 30px;
+         }
+
+        .content li{
+            font-size: 1em;
+            color: #34495e;
+            margin-bottom: 5px;
+
+        }
+
 
         @media (max-width: 768px) {
               body {
@@ -261,9 +349,37 @@
 <body>
     <h1>Liver Injury Backtracker</h1>
      <h2>by Mohammad Almeqdadi, MD</h2>
+
+     <div class="guide-container">
+        <button type="button" class="collapsible">Guide</button>
+          <div class="content">
+              <h1>Enzyme Backtracker</h1>
+
+              <p>A simple web tool for estimating past enzyme levels based on current readings and enzyme half-lives. This tool can be useful in clinical settings to understand the potential timeline of enzyme changes.</p>
+
+              <h2>Description</h2>
+              <p>This application allows users to input current levels of three common enzymes (AST, ALT, and LDH), along with the date and time the readings were taken. It then uses the enzymes' half-lives (default values are provided but are editable) to backtrack and estimate what the enzyme levels might have been at specified intervals in the past.</p>
+
+              <h2>Key Features:</h2>
+               <ul>
+                  <li><b>Date and Time Input:</b>  Specify when the current enzyme levels were measured.</li>
+                  <li><b>Editable Half-Lives:</b> Customize the half-lives of AST, ALT, and LDH, or use the default values.</li>
+                  <li><b>Custom Time Steps:</b> Control how many time steps to go back, and how large each step is.</li>
+                  <li><b>Table Output:</b> View the historical enzyme estimates in a well organized table, with columns of Hours Ago, Date, Time, AST, ALT, and LDH</li>
+              </ul>
+
+              <h2>Usage</h2>
+                <ul>
+                    <li>Enter the current date and time of the enzyme measurement.</li>
+                    <li>Enter the current levels of AST, ALT, and LDH.</li>
+                    <li>Optionally, adjust the half-lives for each enzyme, the number of time steps to go back, and the time step size.</li>
+                </ul>
+          </div>
+      </div>
+
      <div class="form-container">
             <div class="input-group">
-                <label for="dateTime">Enter Date/Time:</label>
+                <label for="dateTime">Measurement Date/Time:</label>
                 <input type="datetime-local" id="dateTime">
             </div>
 
@@ -291,17 +407,22 @@
                     </div>
              </div>
 
-           <div class="input-group">
-                <label for="astLevel">Current AST Level:</label>
-                <input type="number" id="astLevel">
-            </div>
             <div class="input-group">
-                <label for="altLevel">Current ALT Level:</label>
-                <input type="number" id="altLevel">
+                <label>Enzyme Levels</label>
             </div>
-            <div class="input-group">
-               <label for="ldhLevel">Current LDH Level:</label>
-                <input type="number" id="ldhLevel">
+             <div class="current-levels-container">
+                <div class="input-group">
+                    <label for="astLevel">AST</label>
+                    <input type="number" id="astLevel">
+                 </div>
+                 <div class="input-group">
+                    <label for="altLevel">ALT</label>
+                    <input type="number" id="altLevel">
+                 </div>
+                 <div class="input-group">
+                    <label for="ldhLevel">LDH</label>
+                    <input type="number" id="ldhLevel">
+                 </div>
             </div>
 
             <button onclick="calculate()">Calculate</button>
@@ -416,7 +537,7 @@
             const dateTimeInput = document.getElementById('dateTime');
 
             const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+            const month = String(now.getMonth() + 1).padStart(2, '0');
             const day = String(now.getDate()).padStart(2, '0');
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
@@ -425,16 +546,18 @@
 
             dateTimeInput.value = formattedDateTime;
 
-            var coll = document.querySelector(".collapsible");
-            coll.addEventListener("click", function() {
-                this.classList.toggle("active");
-                var content = this.nextElementSibling;
-                if (content.style.maxHeight){
-                content.style.maxHeight = null;
-                } else {
-                content.style.maxHeight = content.scrollHeight + "px";
-                }
-            });
+             var coll = document.querySelectorAll(".collapsible");
+                coll.forEach(function(item) {
+                    item.addEventListener("click", function() {
+                        this.classList.toggle("active");
+                        var content = this.nextElementSibling;
+                         if (content.style.maxHeight){
+                             content.style.maxHeight = null;
+                             } else {
+                             content.style.maxHeight = content.scrollHeight + "px";
+                             }
+                     });
+                 });
          });
     </script>
 </body>
