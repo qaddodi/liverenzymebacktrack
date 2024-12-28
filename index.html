@@ -379,7 +379,7 @@
              const { timePoints, data } = backtrackEnzymes(altLevel, astLevel, ldhLevel, altHalfLife, astHalfLife, ldhHalfLife, timeSteps, stepSizeHours);
 
 
-            let tableHTML = '<table><thead><tr><th>Time (h ago)</th><th>Date</th><th>Time</th>';
+            let tableHTML = '<table><thead><tr><th>h ago</th><th>Date</th><th>Time</th>';
              const enzymes = ["AST", "ALT", "LDH"];
            for (const enzyme of enzymes){
                  if (data[enzyme]){
