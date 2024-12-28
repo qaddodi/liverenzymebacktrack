@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enzyme Backtracker</title>
+    <style>
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 20px;
+            background-color: #f5f8fa; /* Light background */
+            color: #34495e; /* Darker text */
+            line-height: 1.6;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            text-align: center;
+             color: #2980b9; /* Primary color */
+             margin-bottom: 25px;
+            font-size: 2.2em;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+             border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+
+        }
+
+         .form-container {
+            width: 90%;
+            max-width: 700px;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+         .input-group label {
+            font-size: 1em;
+            color: #555;
+            text-align: left;
+            font-weight: 500;
+         }
+
+        .input-group input[type="number"],
+        .input-group input[type="datetime-local"] {
+            width: calc(100% - 20px);
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+             font-size: 1em;
+             transition: border-color 0.2s ease;
+             box-sizing: border-box;
+
+         }
+
+          .input-group input[type="number"]:focus,
+           .input-group input[type="datetime-local"]:focus {
+               border-color: #3498db;
+               outline: none;
+           }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 14px;
+             background-color: #3498db; /* Button color */
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.05em;
+            font-weight: 500;
+            margin-top: 15px;
+            transition: background-color 0.3s ease;
+        }
+
+         button:hover {
+            background-color: #2980b9; /* Button hover color */
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 25px;
+            background: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Enhanced shadow */
+            border-radius: 12px;
+            overflow: hidden; /* Ensures rounded corners don't get cut off*/
+            border: 1px solid #ecf0f1; /* Added overall border */
+        }
+
+        th,
+        td {
+            border: 1px solid #ecf0f1;
+            padding: 14px 12px; /* Slightly increased padding */
+            text-align: center;
+            font-size: 1em; /* Slightly increased font size */
+            transition: all 0.2s ease;
+        }
+
+        td {
+            font-style: normal;
+            color: #34495e; /* Darker text color for body cells*/
+        }
+
+        tr:nth-child(2) td {
+            font-style: italic;
+        }
+
+
+        th {
+            background-color: #f5f5f5; /* Slightly lighter for the header */
+            font-weight: 600;
+            color: #2c3e50;
+            letter-spacing: 0.3px;
+        }
+
+
+        tr:hover {
+            background-color: #f9f9f9; /* Subtle hover highlight */
+        }
+
+
+        tr:last-child td {
+            border-bottom: none; /* Remove border for the last row */
+        }
+
+
+        th:first-child,
+        td:first-child {
+            text-align: left;
+        }
+
+        th:last-child,
+        td:last-child {
+            border-right: none;
+        }
+
+        /*  Added a more prominent border on the top row*/
+        thead tr {
+            border-bottom: 2px solid #ddd;
+        }
+
+        th:first-child,
+        td:first-child {
+            text-align: left;
+            font-weight: bold; /* Added this line to bold the first column */
+        }
+        .collapsible {
+            background-color: #f0f0f0;
+            color: #34495e;
+            cursor: pointer;
+            padding: 16px;
+             width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+             font-size: 1em;
+            border-radius: 10px;
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+        }
+        .collapsible:hover {
+            background-color: #ecf0f1;
+        }
+
+        .active, .collapsible:hover {
+            background-color: #ecf0f1;
+        }
+
+         .collapsible:after {
+            content: '\002B';
+             color: #777;
+            font-weight: bold;
+            float: right;
+            margin-left: 5px;
+             margin-right: 5px;
+        }
+
+        .active:after {
+            content: "\2212"; /* Minus sign */
+        }
+
+        .content {
+            padding: 0 18px;
+            max-height: 0;
+            overflow: hidden;
+             transition: max-height 0.3s ease-out;
+            background-color: #f9f9f9;
+             border: 1px solid #ddd;
+             border-radius: 0 0 10px 10px;
+        }
+
+        @media (max-width: 768px) {
+              body {
+                margin: 10px;
+               padding: 5px;
+            }
+                .form-container {
+               width: 95%;
+            }
+
+            h1 {
+                font-size: 1.8em;
+                margin-bottom: 20px;
+            }
+              .input-group label {
+               font-size: 0.9em;
+              }
+
+            .input-group input[type="number"],
+             .input-group input[type="datetime-local"] {
+                padding: 10px;
+                font-size: 0.9em;
+            }
+
+            button {
+                padding: 12px;
+                font-size: 0.95em;
+            }
+
+           th, td {
+                padding: 10px;
+                font-size: 0.85em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Enzyme Backtracker</h1>
+     <div class="form-container">
+            <div class="input-group">
+                <label for="dateTime">Enter Date/Time:</label>
+                <input type="datetime-local" id="dateTime">
+            </div>
+
+           <button type="button" class="collapsible">Default Inputs (Optional)</button>
+             <div class="content">
+                   <div class="input-group">
+                        <label for="astHalfLife">AST Half-Life (hours, default 17):</label>
+                        <input type="number" id="astHalfLife" value="17">
+                  </div>
+                 <div class="input-group">
+                       <label for="altHalfLife">ALT Half-Life (hours, default 72):</label>
+                        <input type="number" id="altHalfLife" value="72">
+                  </div>
+                 <div class="input-group">
+                     <label for="ldhHalfLife">LDH Half-Life (hours, default 24):</label>
+                       <input type="number" id="ldhHalfLife" value="24">
+                  </div>
+                   <div class="input-group">
+                        <label for="timeSteps">Time Steps (default 10):</label>
+                        <input type="number" id="timeSteps" value="10">
+                    </div>
+                  <div class="input-group">
+                        <label for="stepSize">Step Size (hours, default 12):</label>
+                        <input type="number" id="stepSize" value="12">
+                    </div>
+             </div>
+
+           <div class="input-group">
+                <label for="astLevel">Current AST Level:</label>
+                <input type="number" id="astLevel">
+            </div>
+            <div class="input-group">
+                <label for="altLevel">Current ALT Level:</label>
+                <input type="number" id="altLevel">
+            </div>
+            <div class="input-group">
+               <label for="ldhLevel">Current LDH Level:</label>
+                <input type="number" id="ldhLevel">
+            </div>
+
+            <button onclick="calculate()">Calculate</button>
+      </div>
+
+
+    <div id="results"></div>
+
+
+    <script>
+    function parseDateTime(dateTimeString) {
+            return new Date(dateTimeString);
+        }
+
+        function formatDate(date) {
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${month}-${day}-${year}`;
+        }
+
+        function formatTime(date) {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
+       function backtrackEnzymes(alt, ast, ldh, altHalfLife, astHalfLife, ldhHalfLife, timeSteps, stepSizeHours) {
+         const halfLives = { "ALT": altHalfLife, "AST": astHalfLife, "LDH": ldhHalfLife };
+        const enzymes = { "AST": ast,"ALT": alt,"LDH": ldh };
+         const timePoints = Array.from({ length: timeSteps }, (_, i) => i * stepSizeHours);
+         const data = {};
+
+           for (const enzyme in enzymes) {
+                if (enzymes[enzyme] != null) {
+                    data[enzyme] = [];
+                    for (const hoursAgo of timePoints) {
+                        const decayFactor = Math.pow(2, hoursAgo / halfLives[enzyme]);
+                        const valueAtTime = enzymes[enzyme] * decayFactor;
+                        data[enzyme].push(Math.round(valueAtTime));
+                    }
+                }
+            }
+
+        return { timePoints, data };
+    }
+
+        function calculate() {
+            let dateTimeString = document.getElementById('dateTime').value;
+
+            if (!dateTimeString) {
+                 const now = new Date();
+                dateTimeString = now.toISOString().slice(0, 16);
+            }
+
+            const altLevel = document.getElementById('altLevel').value === "" ? null : parseFloat(document.getElementById('altLevel').value);
+            const astLevel = document.getElementById('astLevel').value === "" ? null : parseFloat(document.getElementById('astLevel').value);
+            const ldhLevel = document.getElementById('ldhLevel').value === "" ? null : parseFloat(document.getElementById('ldhLevel').value);
+            const altHalfLife = parseInt(document.getElementById('altHalfLife').value);
+            const astHalfLife = parseInt(document.getElementById('astHalfLife').value);
+            const ldhHalfLife = parseInt(document.getElementById('ldhHalfLife').value);
+            const timeSteps = parseInt(document.getElementById('timeSteps').value);
+            const stepSizeHours = parseInt(document.getElementById('stepSize').value);
+
+            let initialDate;
+
+            try{
+                initialDate = parseDateTime(dateTimeString)
+
+            } catch (e){
+                alert('Invalid date/time format');
+                 return;
+            }
+
+             const { timePoints, data } = backtrackEnzymes(altLevel, astLevel, ldhLevel, altHalfLife, astHalfLife, ldhHalfLife, timeSteps, stepSizeHours);
+
+
+            let tableHTML = '<table><thead><tr><th>Time (h ago)</th><th>Date</th><th>Time</th>';
+             const enzymes = ["AST", "ALT", "LDH"];
+           for (const enzyme of enzymes){
+                 if (data[enzyme]){
+                     tableHTML += `<th>${enzyme}</th>`
+                 }
+             }
+             tableHTML += '</tr></thead><tbody>';
+
+            for (let i = 0; i < timePoints.length; i++) {
+                const pastDate = new Date(initialDate.getTime() - timePoints[i] * 60 * 60 * 1000);
+                tableHTML += `<tr><td>${timePoints[i]}</td>`;
+                 tableHTML += `<td>${formatDate(pastDate)}</td>`
+                 tableHTML += `<td>${formatTime(pastDate)}</td>`;
+
+               for (const enzyme of enzymes){
+                   if (data[enzyme]){
+                     tableHTML += `<td>${data[enzyme][i]}</td>`
+                 }
+                }
+
+                tableHTML += '</tr>';
+            }
+
+
+            tableHTML += '</tbody></table>';
+
+            document.getElementById('results').innerHTML = tableHTML;
+        }
+
+
+        // Set the default date/time on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            const dateTimeInput = document.getElementById('dateTime');
+
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+
+            const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+            dateTimeInput.value = formattedDateTime;
+
+            var coll = document.querySelector(".collapsible");
+            coll.addEventListener("click", function() {
+                this.classList.toggle("active");
+                var content = this.nextElementSibling;
+                if (content.style.maxHeight){
+                content.style.maxHeight = null;
+                } else {
+                content.style.maxHeight = content.scrollHeight + "px";
+                }
+            });
+         });
+    </script>
+</body>
+</html>
