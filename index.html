@@ -1,435 +1,240 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liver Injury Backtracker</title>
-    <style>
-        body {
-            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            margin: 20px;
-            background-color: #f5f8fa;
-            color: #34495e;
-            line-height: 1.6;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Liver Injury Backtracker | Mohammad Almeqdadi, MD</title>
+<meta name="description" content="Work backward from today's AST, ALT, and LDH to estimate what they were hours or days ago, using editable enzyme half-lives.">
+<meta name="theme-color" content="#f5f1ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0d11" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="/assets/icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<link rel="preload" href="/assets/fonts/fraunces-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/geist-var.woff2" as="font" type="font/woff2" crossorigin>
+<!-- shared look, served by the homepage (qaddodi/qaddodi.github.io: assets/tool.css) -->
+<link rel="stylesheet" href="/assets/tool.css">
+<script>
+  /* apply the saved theme (shared with the homepage) before first paint */
+  try { var t = localStorage.getItem("qd:theme"); if (t === '"light"' || t === '"dark"') document.documentElement.dataset.theme = JSON.parse(t); } catch (e) {}
+</script>
+<script src="/assets/tool.js" defer></script>
+<style>
+  .bt { width: min(100% - 2 * var(--qd-pad), var(--qd-wide)); margin: 0 auto; display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 20px; align-items: start; }
+  .card { border: 1px solid var(--qd-line); border-radius: var(--qd-r-lg); background: var(--qd-surface); box-shadow: var(--qd-shadow-1); }
+  .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 18px 22px 0; }
+  .card-kicker { margin: 0; color: var(--qd-muted); font-family: var(--qd-mono); font-size: .72rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; }
+  .card-body { display: grid; gap: 16px; padding: 16px 22px 22px; }
 
-        h1 {
-            text-align: center;
-             color: #2980b9;
-             margin-bottom: 10px;
-            font-size: 2.2em;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid #ecf0f1;
-            padding-bottom: 10px;
-            margin-bottom: 0px;
-            margin-top: 0px;
+  .field { display: grid; gap: 6px; }
+  .field label, .field .lbl { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: .9rem; font-weight: 600; }
+  .unit { color: var(--qd-muted); font-family: var(--qd-mono); font-size: .7rem; font-weight: 400; letter-spacing: .04em; }
+  input[type="number"], input[type="datetime-local"] {
+    width: 100%; min-width: 0; height: 46px; padding: 0 14px;
+    border: 1px solid var(--qd-line-2); border-radius: 12px;
+    background: var(--qd-surface); color: var(--qd-ink);
+    font-family: var(--qd-mono); font-size: 1rem;
+    transition: border-color 160ms var(--qd-ease), box-shadow 160ms var(--qd-ease);
+  }
+  input::placeholder { color: color-mix(in srgb, var(--qd-muted) 70%, transparent); }
+  input:focus { outline: none; border-color: var(--qd-amber); box-shadow: 0 0 0 4px color-mix(in srgb, var(--qd-amber) 22%, transparent); }
+  .enzymes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .enzymes .field label { justify-content: flex-start; gap: 7px; }
+  .swatch { width: 10px; height: 10px; border-radius: 50%; flex: none; align-self: center; }
+  .s-ast { background: var(--qd-crimson); } .s-alt { background: var(--qd-amber); } .s-ldh { background: var(--qd-blue); }
 
-        }
+  details.fold { border-top: 1px solid var(--qd-line); padding-top: 12px; }
+  details.fold > summary { display: flex; align-items: center; gap: 8px; color: var(--qd-ink-2); font-size: .88rem; font-weight: 600; cursor: pointer; list-style: none; }
+  details.fold > summary::-webkit-details-marker { display: none; }
+  details.fold > summary::before { content: "+"; display: grid; place-items: center; width: 20px; height: 20px; border: 1px solid var(--qd-line-2); border-radius: 6px; color: var(--qd-muted); font-family: var(--qd-mono); font-size: .8rem; }
+  details.fold[open] > summary::before { content: "−"; }
+  .fold-body { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding-top: 12px; }
+  .fold-body .wide { grid-column: span 3; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .fold-note { grid-column: 1 / -1; margin: 0; color: var(--qd-muted); font-size: .8rem; }
 
-         h2 {
-            text-align: center;
-            font-size: 0.8em;
-            color: #999;
-            font-style: italic;
-            margin-top: 0px;
-            margin-bottom: 10px;
-         }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border: 1px solid var(--qd-line-2); border-radius: 999px; background: var(--qd-surface); color: var(--qd-ink); font: 600 .88rem var(--qd-sans); cursor: pointer; transition: border-color 160ms var(--qd-ease), background-color 160ms var(--qd-ease), transform 200ms var(--qd-spring); }
+  .btn:hover { border-color: var(--qd-ink); }
+  .btn:active { transform: scale(.97); }
+  .btn-amber { border-color: var(--qd-amber); background: var(--qd-amber); color: var(--qd-amber-on); }
+  .btn-amber:hover { border-color: var(--qd-amber-ink); }
+  .private { margin: 0; color: var(--qd-muted); font-size: .8rem; }
 
-        /* Styles for the Guide button and container */
-        .guide-container {
-            width: 90%;
-            max-width: 700px;
-            margin-bottom: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+  /* results */
+  .empty { display: grid; justify-items: start; gap: 6px; padding: 36px 22px 40px; }
+  .empty-title { margin: 0; font-family: var(--qd-display); font-size: 1.6rem; font-weight: 420; font-variation-settings: "opsz" 72, "SOFT" 50; letter-spacing: -.02em; line-height: 1.1; }
+  .empty p { margin: 0; color: var(--qd-ink-2); }
+  .chart-wrap { padding: 8px 14px 0; border-radius: var(--qd-r-md); background: radial-gradient(90% 90% at 50% 100%, color-mix(in srgb, var(--qd-amber-wash) 45%, transparent), transparent), var(--qd-amber-bg); }
+  .chart { display: block; width: 100%; height: auto; overflow: visible; }
+  .chart .grid { stroke: var(--qd-line-2); stroke-width: 1; stroke-dasharray: 2 4; }
+  .chart .axis { stroke: var(--qd-line-2); stroke-width: 1.2; }
+  .chart text { fill: var(--qd-muted); font-family: var(--qd-mono); font-size: 11px; }
+  .chart .line { fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  .chart .l-ast { stroke: var(--qd-crimson); } .chart .d-ast { fill: var(--qd-crimson); }
+  .chart .l-alt { stroke: var(--qd-amber); }   .chart .d-alt { fill: var(--qd-amber); }
+  .chart .l-ldh { stroke: var(--qd-blue); }    .chart .d-ldh { fill: var(--qd-blue); }
+  .chart .end { font-weight: 600; paint-order: stroke; stroke: var(--qd-amber-bg); stroke-width: 4px; stroke-linejoin: round; }
+  .chart .t-ast { fill: var(--qd-crimson-ink); } .chart .t-alt { fill: var(--qd-amber-ink); } .chart .t-ldh { fill: var(--qd-blue-ink); }
+  .chart-cap { margin: 0; padding: 4px 4px 10px; color: var(--qd-muted); font-size: .78rem; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--qd-line); border-radius: var(--qd-r-md); }
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  th, td { padding: 9px 12px; border-bottom: 1px solid var(--qd-line); text-align: right; white-space: nowrap; }
+  th:nth-child(-n+4), td:nth-child(-n+4) { text-align: left; }
+  .c-when { display: none; }
+  thead th { position: sticky; top: 0; background: var(--qd-surface-2); color: var(--qd-muted); font-family: var(--qd-mono); font-size: .7rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody td { font-family: var(--qd-mono); font-variant-numeric: tabular-nums; }
+  tbody tr:first-child td { background: var(--qd-amber-bg); font-weight: 600; }
+  tbody tr:hover td { background: var(--qd-surface-2); }
 
+  .how { width: min(100% - 2 * var(--qd-pad), var(--qd-wide)); margin: 20px auto 0; }
+  .how > details { border: 1px solid var(--qd-line); border-radius: var(--qd-r-lg); background: var(--qd-surface); }
+  .how summary { padding: 16px 22px; font-weight: 600; cursor: pointer; }
+  .how-body { display: grid; gap: 10px; padding: 0 22px 20px; color: var(--qd-ink-2); font-size: .94rem; }
+  .how-body p, .how-body ul { margin: 0; max-width: 70ch; }
+  .how-body ul { padding-left: 20px; }
+  .how code { font-family: var(--qd-mono); font-size: .86em; }
 
-         .guide-container .collapsible {
-             width: 100%;
-             margin: 0px;
-             display: block;
-             text-align: center; /* Center the text in the guide button */
-             margin-bottom: 10px;
-          }
-
-          .guide-container .content {
-              width: 100%;
-          }
-
-
-         .form-container {
-            width: 90%;
-            max-width: 700px;
-            padding: 20px;
-            background: white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-         .input-group label {
-            font-size: 1em;
-            color: #555;
-            text-align: left;
-            font-weight: 500;
-         }
-        /*Center labels in input groups*/
-         .input-group:not(.current-levels-container .input-group) label {
-            text-align: center;
-         }
-
-         /*Ensure all inputs within the optional input group get centered labels */
-         .collapsible + .content .input-group label{
-              text-align: center;
-          }
-
-        .input-group input[type="number"],
-        .input-group input[type="datetime-local"] {
-            width: calc(100% - 20px);
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-             font-size: 1em;
-             transition: border-color 0.2s ease;
-             box-sizing: border-box;
-
-         }
-
-          .input-group input[type="number"]:focus,
-           .input-group input[type="datetime-local"]:focus {
-               border-color: #3498db;
-               outline: none;
-           }
-
-           /* New container for current levels */
-        .current-levels-container {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: space-between; /* Distribute space evenly */
-          gap: 15px; /* Spacing between groups */
-          margin-bottom: 10px; /* Space below the group of current level inputs */
-        }
-
-        .current-levels-container .input-group {
-            flex: 1; /* each input expands to take equal space */
-            min-width: 20%; /* Prevent them from being too narrow on smaller screens */
-            margin-bottom: 0; /* prevent extra spacing below individual inputs*/
-        }
-
-       .current-levels-container label {
-            text-align: center;
-            margin-bottom: 5px; /* reduce the margin below the text */
-        }
-
-        button {
-            display: block;
-            width: 100%;
-            padding: 14px;
-             background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1.05em;
-            font-weight: 500;
-            margin-top: 15px;
-            transition: background-color 0.3s ease;
-        }
-
-         button:hover {
-            background-color: #2980b9;
-        }
-
-        table {
-            border-collapse: collapse;
-             width: 98%;
-            margin-top: 25px;
-            background: white;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-            overflow-x: auto;
-             border: 1px solid #ecf0f1;
-            margin-left: auto;
-            margin-right: auto;
-              display: block;
-
-        }
-
-        th,
-        td {
-             border: 1px solid #ecf0f1;
-            padding: 10px 8px;
-            text-align: center;
-            font-size: 0.95em;
-            transition: all 0.2s ease;
-             white-space: nowrap;
-         }
-
-        td {
-            font-style: normal;
-            color: #34495e;
-        }
-
-
-        th {
-            background-color: #f5f5f5;
-            font-weight: 600;
-            color: #2c3e50;
-            letter-spacing: 0.3px;
-        }
-
-
-        tr:hover {
-            background-color: #f9f9f9;
-        }
-
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-
-        th:first-child,
-        td:first-child {
-            text-align: left;
-        }
-
-        th:last-child,
-        td:last-child {
-            border-right: none;
-        }
-
-
-        thead tr {
-            border-bottom: 2px solid #ddd;
-        }
-
-        th:first-child,
-        td:first-child {
-            text-align: left;
-            font-weight: bold;
-        }
-        .collapsible {
-            background-color: #f0f0f0;
-            color: #34495e;
-            cursor: pointer;
-            padding: 16px;
-             width: 100%;
-            border: none;
-            text-align: left;
-            outline: none;
-             font-size: 1em;
-            border-radius: 10px;
-            display: block;
-            margin-bottom: 10px;
-            font-weight: 500;
-            transition: background-color 0.2s ease;
-        }
-        .collapsible:hover {
-            background-color: #ecf0f1;
-        }
-
-        .active, .collapsible:hover {
-            background-color: #ecf0f1;
-        }
-
-         .collapsible:after {
-            content: '\002B';
-             color: #777;
-            font-weight: bold;
-            float: right;
-            margin-left: 5px;
-             margin-right: 5px;
-        }
-
-        .active:after {
-            content: "\2212";
-        }
-
-        .content {
-            padding: 0 18px;
-            max-height: 0;
-            overflow: hidden;
-             transition: max-height 0.3s ease-out;
-            background-color: #f9f9f9;
-             border: 1px solid #ddd;
-             border-radius: 0 0 10px 10px;
-             margin-bottom: 10px;
-        }
-
-         .content h1 {
-            font-size: 1.5em;
-            text-align: left;
-            border-bottom: 1px solid #ecf0f1;
-            padding-bottom: 5px;
-        }
-
-         .content h2 {
-            font-size: 1.1em;
-            color: #555;
-            margin-top: 15px;
-             margin-bottom: 10px;
-            text-align: left;
-        }
-
-         .content p {
-            font-size: 1em;
-            color: #34495e;
-            margin-bottom: 10px;
-            text-align: left;
-         }
-
-         .content ul{
-            margin-bottom: 10px;
-             padding-left: 30px;
-         }
-
-        .content li{
-            font-size: 1em;
-            color: #34495e;
-            margin-bottom: 5px;
-
-        }
-
-
-        @media (max-width: 768px) {
-              body {
-                margin: 10px;
-               padding: 5px;
-            }
-                .form-container {
-               width: 95%;
-            }
-
-            h1 {
-                font-size: 1.8em;
-                margin-bottom: 20px;
-            }
-              .input-group label {
-               font-size: 0.9em;
-              }
-
-            .input-group input[type="number"],
-             .input-group input[type="datetime-local"] {
-                padding: 10px;
-                font-size: 0.9em;
-            }
-
-            button {
-                padding: 12px;
-                font-size: 0.95em;
-            }
-
-           th, td {
-                padding: 8px;
-                font-size: 0.85em;
-            }
-        }
-    </style>
+  @media (max-width: 900px) { .bt { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 560px) {
+    .c-date, .c-time { display: none; }
+    .c-when { display: table-cell; line-height: 1.25; }
+    th, td { padding: 8px 9px; }
+  }
+  @media (max-width: 480px) {
+    .enzymes { gap: 8px; }
+    input[type="number"] { padding: 0 10px; }
+    .fold-body { grid-template-columns: 1fr 1fr 1fr; }
+  }
+  @media print {
+    .how, .actions, .private, details.fold { display: none !important; }
+    .bt { grid-template-columns: 1fr; }
+  }
+</style>
 </head>
-<body>
-    <h1>Liver Injury Backtracker</h1>
-     <h2>by Mohammad Almeqdadi, MD</h2>
+<body class="qd">
+<a class="qd-skip" href="#main">Skip to the calculator</a>
+<header class="qd-top">
+  <div class="qd-top-inner">
+    <a class="qd-brand" href="/" aria-label="Mohammad Almeqdadi, MD: all tools"><svg class="mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path class="m-hex" d="M27.50 16.00 L21.75 25.96 L10.25 25.96 L4.50 16.00 L10.25 6.04 L21.75 6.04Z"/><path class="m-sin" d="M16 16L27.50 16.00M16 16L10.25 25.96M16 16L10.25 6.04"/><circle class="m-pv" cx="27.50" cy="16.00" r="2.6"/><circle class="m-ha" cx="21.75" cy="25.96" r="2.6"/><circle class="m-bd" cx="10.25" cy="25.96" r="2.6"/><circle class="m-pv" cx="4.50" cy="16.00" r="2.6"/><circle class="m-ha" cx="10.25" cy="6.04" r="2.6"/><circle class="m-bd" cx="21.75" cy="6.04" r="2.6"/><circle class="m-cv" cx="16" cy="16" r="3.4"/></svg><span class="qd-brand-name">Almeqdadi<span class="qd-brand-md">MD</span></span></a>
+    <a class="qd-crumb" href="/?type=calculator#tools"><span class="dot" aria-hidden="true"></span>Calculators</a>
+    <div class="qd-top-tools">
+      <button class="qd-icon-btn" type="button" data-qd-theme aria-label="Color theme: automatic">
+        <svg class="i-auto" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="M10 3.5a6.5 6.5 0 0 1 0 13z" fill="currentColor" stroke="none"/></svg>
+        <svg class="i-light" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.3 4.3l1.4 1.4M14.3 14.3l1.4 1.4M4.3 15.7l1.4-1.4M14.3 5.7l1.4-1.4"/></svg>
+        <svg class="i-dark" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.5 12.2A7 7 0 0 1 7.8 3.5a7 7 0 1 0 8.7 8.7z"/></svg>
+      </button>
+      <a class="qd-all" href="/#tools"><span aria-hidden="true">&larr;</span> All tools</a>
+    </div>
+  </div>
+</header>
 
-     <div class="guide-container">
-        <button type="button" class="collapsible">Guide</button>
-          <div class="content">
-              <h1>Liver Injury Backtracker</h1>
+<header class="qd-head">
+  <p class="qd-eyebrow"><span class="dot" aria-hidden="true"></span>Calculator &middot; Timing of liver injury</p>
+  <h1 class="qd-title">Liver Injury <em>Backtracker</em></h1>
+  <p class="qd-lede">Work backward from today&rsquo;s AST, ALT, and LDH to estimate what they were hours or days ago, using each enzyme&rsquo;s half-life.</p>
+</header>
 
-              <p>A simple web tool for estimating past enzyme levels based on current readings and enzyme half-lives. This tool can be useful in clinical settings to understand the potential timeline of enzyme changes.</p>
+<main class="bt" id="main">
+  <section class="card" aria-labelledby="in-title">
+    <div class="card-head"><h2 class="card-kicker" id="in-title">Labs</h2></div>
+    <div class="card-body">
+      <div class="field">
+        <label for="dateTime">Drawn at</label>
+        <input type="datetime-local" id="dateTime">
+      </div>
 
-              <h2>Description</h2>
-              <p>This application allows users to input current levels of three common enzymes (AST, ALT, and LDH), along with the date and time the readings were taken. It then uses the enzymes' half-lives (default values are provided but are editable) to backtrack and estimate what the enzyme levels might have been at specified intervals in the past.</p>
+      <div class="enzymes">
+        <div class="field">
+          <label for="astLevel"><span class="swatch s-ast" aria-hidden="true"></span>AST</label>
+          <input type="number" id="astLevel" inputmode="decimal" min="0" placeholder="U/L">
+        </div>
+        <div class="field">
+          <label for="altLevel"><span class="swatch s-alt" aria-hidden="true"></span>ALT</label>
+          <input type="number" id="altLevel" inputmode="decimal" min="0" placeholder="U/L">
+        </div>
+        <div class="field">
+          <label for="ldhLevel"><span class="swatch s-ldh" aria-hidden="true"></span>LDH</label>
+          <input type="number" id="ldhLevel" inputmode="decimal" min="0" placeholder="U/L">
+        </div>
+      </div>
 
-              <h2>Key Features:</h2>
-               <ul>
-                  <li><b>Date and Time Input:</b>  Specify when the current enzyme levels were measured.</li>
-                  <li><b>Editable Half-Lives:</b> Customize the half-lives of AST, ALT, and LDH, or use the default values.</li>
-                  <li><b>Custom Time Steps:</b> Control how many time steps to go back, and how large each step is.</li>
-                  <li><b>Table Output:</b> View the historical enzyme estimates in a well organized table, with columns of Hours Ago, Date, Time, AST, ALT, and LDH</li>
-              </ul>
-
-              <h2>Usage</h2>
-                <ul>
-                    <li>Enter the current date and time of the enzyme measurement.</li>
-                    <li>Enter the current levels of AST, ALT, and LDH.</li>
-                    <li>Optionally, adjust the half-lives for each enzyme, the number of time steps to go back, and the time step size.</li>
-                </ul>
+      <details class="fold">
+        <summary>Assumptions</summary>
+        <div class="fold-body">
+          <div class="field">
+            <label for="astHalfLife">AST t&frac12; <span class="unit">h</span></label>
+            <input type="number" id="astHalfLife" value="17" inputmode="numeric" min="1">
           </div>
+          <div class="field">
+            <label for="altHalfLife">ALT t&frac12; <span class="unit">h</span></label>
+            <input type="number" id="altHalfLife" value="72" inputmode="numeric" min="1">
+          </div>
+          <div class="field">
+            <label for="ldhHalfLife">LDH t&frac12; <span class="unit">h</span></label>
+            <input type="number" id="ldhHalfLife" value="24" inputmode="numeric" min="1">
+          </div>
+          <div class="wide">
+            <div class="field">
+              <label for="timeSteps">Time steps</label>
+              <input type="number" id="timeSteps" value="10" inputmode="numeric" min="1">
+            </div>
+            <div class="field">
+              <label for="stepSize">Step size <span class="unit">h</span></label>
+              <input type="number" id="stepSize" value="12" inputmode="numeric" min="1">
+            </div>
+          </div>
+          <p class="fold-note">Defaults: AST 17 h, ALT 72 h, LDH 24 h; 10 steps of 12 hours. Whole hours.</p>
+        </div>
+      </details>
+
+      <div class="actions">
+        <button class="btn" type="button" id="example">Load example</button>
+        <button class="btn" type="button" id="clear">Clear</button>
+        <button class="btn btn-amber" type="button" id="copy" hidden>Copy table</button>
       </div>
+      <p class="private">Results update as you type. Nothing leaves your browser.</p>
+    </div>
+  </section>
 
-     <div class="form-container">
-            <div class="input-group">
-                <label for="dateTime">Measurement Date/Time:</label>
-                <input type="datetime-local" id="dateTime">
-            </div>
-
-           <button type="button" class="collapsible">Default Inputs (Optional)</button>
-             <div class="content">
-                   <div class="input-group">
-                        <label for="astHalfLife">AST Half-Life (hours, default 17):</label>
-                        <input type="number" id="astHalfLife" value="17">
-                  </div>
-                 <div class="input-group">
-                       <label for="altHalfLife">ALT Half-Life (hours, default 72):</label>
-                        <input type="number" id="altHalfLife" value="72">
-                  </div>
-                 <div class="input-group">
-                     <label for="ldhHalfLife">LDH Half-Life (hours, default 24):</label>
-                       <input type="number" id="ldhHalfLife" value="24">
-                  </div>
-                   <div class="input-group">
-                        <label for="timeSteps">Time Steps (default 10):</label>
-                        <input type="number" id="timeSteps" value="10">
-                    </div>
-                  <div class="input-group">
-                        <label for="stepSize">Step Size (hours, default 12):</label>
-                        <input type="number" id="stepSize" value="12">
-                    </div>
-             </div>
-
-            <div class="input-group">
-                <label>Enzyme Levels</label>
-            </div>
-             <div class="current-levels-container">
-                <div class="input-group">
-                    <label for="astLevel">AST</label>
-                    <input type="number" id="astLevel">
-                 </div>
-                 <div class="input-group">
-                    <label for="altLevel">ALT</label>
-                    <input type="number" id="altLevel">
-                 </div>
-                 <div class="input-group">
-                    <label for="ldhLevel">LDH</label>
-                    <input type="number" id="ldhLevel">
-                 </div>
-            </div>
-
-            <button onclick="calculate()">Calculate</button>
+  <section class="card" aria-labelledby="out-title" aria-live="polite">
+    <div class="card-head"><h2 class="card-kicker" id="out-title">Estimated earlier values</h2></div>
+    <div class="card-body" id="results">
+      <div class="empty">
+        <p class="empty-title">Enter at least one enzyme.</p>
+        <p>The chart and table fill in as you type.</p>
       </div>
+    </div>
+  </section>
+</main>
 
+<section class="how" aria-label="How it works">
+  <details>
+    <summary>How it works</summary>
+    <div class="how-body">
+      <p>Enzymes are cleared from the blood at a roughly constant fraction per hour, so each level halves every half-life. Going back in time reverses that: the value <em>h</em> hours earlier is today&rsquo;s value &times; 2<sup>h / half-life</sup>.</p>
+      <p>AST clears fastest (about 17 hours), so it climbs fastest as you go back. ALT clears slowly (about 72 hours). The estimates assume clearance alone, with no ongoing injury, which is why they are most useful after a single, time-limited insult such as ischemia or a toxic ingestion.</p>
+      <ul>
+        <li>Enter when the labs were drawn and any of AST, ALT, and LDH.</li>
+        <li>Adjust the half-lives, the number of steps, or the step size under <b>Assumptions</b>.</li>
+        <li>The table lists each step with its date and time; <b>Copy table</b> copies it as text.</li>
+      </ul>
+    </div>
+  </details>
+</section>
 
-    <div id="results"></div>
+<footer class="qd-foot">
+  <div class="qd-foot-inner">
+    <p>Educational tool. Not medical advice. Interpret results alongside the source publications and clinical judgment. Everything runs in your browser; nothing is sent anywhere.</p>
+    <nav class="qd-foot-links" aria-label="More">
+      <a href="/#tools">All tools</a>
+      <a href="https://github.com/qaddodi/liverenzymebacktrack" target="_blank" rel="noopener noreferrer">Source</a>
+      <span>&copy; 2026 Mohammad Almeqdadi, MD</span>
+    </nav>
+  </div>
+</footer>
 
-
-    <script>
+<script>
     function parseDateTime(dateTimeString) {
             return new Date(dateTimeString);
         }
@@ -447,6 +252,7 @@
             return `${hours}:${minutes}`;
         }
 
+       // The model. Unchanged from the original tool.
        function backtrackEnzymes(alt, ast, ldh, altHalfLife, astHalfLife, ldhHalfLife, timeSteps, stepSizeHours) {
          const halfLives = { "ALT": altHalfLife, "AST": astHalfLife, "LDH": ldhHalfLife };
         const enzymes = { "AST": ast,"ALT": alt,"LDH": ldh };
@@ -467,95 +273,134 @@
         return { timePoints, data };
     }
 
-        function calculate() {
-            let dateTimeString = document.getElementById('dateTime').value;
+    const $ = (id) => document.getElementById(id);
+    const ENZ = ["AST", "ALT", "LDH"];
+    const fmt = (n) => n.toLocaleString("en-US");
+    let lastText = "";
 
-            if (!dateTimeString) {
-                 const now = new Date();
-                dateTimeString = now.toISOString().slice(0, 16);
-            }
+    function readInputs() {
+        let dateTimeString = $('dateTime').value;
+        if (!dateTimeString) {
+            const now = new Date();
+            dateTimeString = now.toISOString().slice(0, 16);
+        }
+        return {
+            dateTimeString,
+            altLevel: $('altLevel').value === "" ? null : parseFloat($('altLevel').value),
+            astLevel: $('astLevel').value === "" ? null : parseFloat($('astLevel').value),
+            ldhLevel: $('ldhLevel').value === "" ? null : parseFloat($('ldhLevel').value),
+            altHalfLife: parseInt($('altHalfLife').value),
+            astHalfLife: parseInt($('astHalfLife').value),
+            ldhHalfLife: parseInt($('ldhHalfLife').value),
+            timeSteps: parseInt($('timeSteps').value),
+            stepSizeHours: parseInt($('stepSize').value),
+        };
+    }
 
-            const altLevel = document.getElementById('altLevel').value === "" ? null : parseFloat(document.getElementById('altLevel').value);
-            const astLevel = document.getElementById('astLevel').value === "" ? null : parseFloat(document.getElementById('astLevel').value);
-            const ldhLevel = document.getElementById('ldhLevel').value === "" ? null : parseFloat(document.getElementById('ldhLevel').value);
-            const altHalfLife = parseInt(document.getElementById('altHalfLife').value);
-            const astHalfLife = parseInt(document.getElementById('astHalfLife').value);
-            const ldhHalfLife = parseInt(document.getElementById('ldhHalfLife').value);
-            const timeSteps = parseInt(document.getElementById('timeSteps').value);
-            const stepSizeHours = parseInt(document.getElementById('stepSize').value);
+    function chartSVG(timePoints, data) {
+        // draw at the width it will be shown, so labels stay legible on a phone
+        const box = document.getElementById('results');
+        const W = Math.round(Math.min(560, Math.max(300, (box.clientWidth || 560) - 28)));
+        const H = W < 420 ? 220 : 240, L = 54, R = 20, T = 16, B = 30;
+        const shown = ENZ.filter((e) => data[e]);
+        const all = shown.flatMap((e) => data[e]).filter((v) => v > 0);
+        if (!all.length || timePoints.length < 2) return "";
+        // log scale: every enzyme is a straight line, with slope set by its half-life
+        let lo = Math.floor(Math.log10(Math.min(...all)));
+        let hi = Math.ceil(Math.log10(Math.max(...all)));
+        if (hi === lo) hi = lo + 1;
+        const maxH = timePoints[timePoints.length - 1];
+        const x = (h) => L + (W - L - R) * (1 - h / maxH);       // today on the right
+        const y = (v) => T + (H - T - B) * (1 - (Math.log10(Math.max(v, 10 ** lo)) - lo) / (hi - lo));
+        let g = "";
+        for (let p = lo; p <= hi; p++) {
+            g += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(10 ** p)}" y2="${y(10 ** p)}"/>`;
+            g += `<text x="${L - 8}" y="${y(10 ** p) + 4}" text-anchor="end">${fmt(10 ** p)}</text>`;
+        }
+        const ticks = [...new Set([0, Math.round(maxH / 2), maxH])];
+        for (const h of ticks) g += `<text x="${x(h)}" y="${H - 8}" text-anchor="middle">${h ? `−${h} h` : "now"}</text>`;
+        g += `<line class="axis" x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}"/>`;
+        // stagger the end labels so they don't collide
+        const ends = shown.map((e) => ({ e, y: y(data[e][data[e].length - 1]) })).sort((a, b) => a.y - b.y);
+        for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 14) ends[i].y = ends[i - 1].y + 14;
+        for (const e of shown) {
+            const k = e.toLowerCase();
+            const pts = timePoints.map((h, i) => `${x(h).toFixed(1)},${y(data[e][i]).toFixed(1)}`).join(" ");
+            g += `<polyline class="line l-${k}" points="${pts}"/>`;
+            g += `<circle class="d-${k}" cx="${x(0)}" cy="${y(data[e][0])}" r="4"/>`;
+            const endY = ends.find((o) => o.e === e).y;
+            g += `<circle class="d-${k}" cx="${x(maxH)}" cy="${y(data[e][data[e].length - 1])}" r="3"/>`;
+            g += `<text class="end t-${k}" x="${x(maxH) - 8}" y="${endY - 8}" text-anchor="start">${e}</text>`;
+        }
+        return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Estimated enzyme levels going back ${maxH} hours, on a log scale">${g}</svg>`;
+    }
 
-            let initialDate;
-
-            try{
-                initialDate = parseDateTime(dateTimeString)
-
-            } catch (e){
-                alert('Invalid date/time format');
-                 return;
-            }
-
-             const { timePoints, data } = backtrackEnzymes(altLevel, astLevel, ldhLevel, altHalfLife, astHalfLife, ldhHalfLife, timeSteps, stepSizeHours);
-
-
-            let tableHTML = '<table><thead><tr><th>h ago</th><th>Date</th><th>Time</th>';
-             const enzymes = ["AST", "ALT", "LDH"];
-           for (const enzyme of enzymes){
-                 if (data[enzyme]){
-                     tableHTML += `<th>${enzyme}</th>`
-                 }
-             }
-             tableHTML += '</tr></thead><tbody>';
-
-            for (let i = 0; i < timePoints.length; i++) {
-                const pastDate = new Date(initialDate.getTime() - timePoints[i] * 60 * 60 * 1000);
-                tableHTML += `<tr><td>${timePoints[i]}</td>`;
-                 tableHTML += `<td>${formatDate(pastDate)}</td>`
-                 tableHTML += `<td>${formatTime(pastDate)}</td>`;
-
-               for (const enzyme of enzymes){
-                   if (data[enzyme]){
-                     tableHTML += `<td>${data[enzyme][i]}</td>`
-                 }
-                }
-
-                tableHTML += '</tr>';
-            }
-
-
-            tableHTML += '</tbody></table>';
-
-            document.getElementById('results').innerHTML = tableHTML;
+    function calculate() {
+        const v = readInputs();
+        const results = $('results');
+        if (v.altLevel == null && v.astLevel == null && v.ldhLevel == null) {
+            results.innerHTML = '<div class="empty"><p class="empty-title">Enter at least one enzyme.</p><p>The chart and table fill in as you type.</p></div>';
+            $('copy').hidden = true;
+            return;
+        }
+        if (![v.altHalfLife, v.astHalfLife, v.ldhHalfLife, v.timeSteps, v.stepSizeHours].every((n) => Number.isFinite(n) && n > 0)) {
+            results.innerHTML = '<div class="empty"><p class="empty-title">Check the assumptions.</p><p>Half-lives, steps, and step size must be whole numbers above zero.</p></div>';
+            $('copy').hidden = true;
+            return;
+        }
+        const initialDate = parseDateTime(v.dateTimeString);
+        if (isNaN(initialDate)) {
+            results.innerHTML = '<div class="empty"><p class="empty-title">Check the date and time.</p></div>';
+            return;
         }
 
+        const { timePoints, data } = backtrackEnzymes(v.altLevel, v.astLevel, v.ldhLevel, v.altHalfLife, v.astHalfLife, v.ldhHalfLife, v.timeSteps, v.stepSizeHours);
+        const shown = ENZ.filter((e) => data[e]);
 
-        // Set the default date/time on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            const now = new Date();
-            const dateTimeInput = document.getElementById('dateTime');
+        let tableHTML = '<div class="table-wrap"><table><thead><tr><th>h ago</th><th class="c-when">When</th><th class="c-date">Date</th><th class="c-time">Time</th>';
+        for (const e of shown) tableHTML += `<th>${e}</th>`;
+        tableHTML += '</tr></thead><tbody>';
+        const lines = [['h ago', 'Date', 'Time', ...shown].join('\t')];
+        for (let i = 0; i < timePoints.length; i++) {
+            const pastDate = new Date(initialDate.getTime() - timePoints[i] * 60 * 60 * 1000);
+            tableHTML += `<tr><td>${timePoints[i]}</td><td class="c-when">${formatDate(pastDate).slice(0, 5)}<br>${formatTime(pastDate)}</td><td class="c-date">${formatDate(pastDate)}</td><td class="c-time">${formatTime(pastDate)}</td>`;
+            for (const e of shown) tableHTML += `<td>${fmt(data[e][i])}</td>`;
+            tableHTML += '</tr>';
+            lines.push([timePoints[i], formatDate(pastDate), formatTime(pastDate), ...shown.map((e) => data[e][i])].join('\t'));
+        }
+        tableHTML += '</tbody></table></div>';
+        lastText = lines.join('\n');
 
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
+        const chart = chartSVG(timePoints, data);
+        results.innerHTML = (chart ? `<div class="chart-wrap">${chart}<p class="chart-cap">Log scale: each line is straight, and steeper means a shorter half-life.</p></div>` : '') + tableHTML;
+        $('copy').hidden = false;
+    }
 
-            const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+    document.addEventListener('DOMContentLoaded', function () {
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        $('dateTime').value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
-            dateTimeInput.value = formattedDateTime;
-
-             var coll = document.querySelectorAll(".collapsible");
-                coll.forEach(function(item) {
-                    item.addEventListener("click", function() {
-                        this.classList.toggle("active");
-                        var content = this.nextElementSibling;
-                         if (content.style.maxHeight){
-                             content.style.maxHeight = null;
-                             } else {
-                             content.style.maxHeight = content.scrollHeight + "px";
-                             }
-                     });
-                 });
-         });
-    </script>
+        document.querySelector('.bt').addEventListener('input', calculate);
+        let rz;
+        let lastW = innerWidth;
+        addEventListener('resize', () => { if (innerWidth === lastW) return; lastW = innerWidth; clearTimeout(rz); rz = setTimeout(calculate, 150); });
+        $('example').addEventListener('click', () => {
+            $('astLevel').value = 1800; $('altLevel').value = 1500; $('ldhLevel').value = 1200;
+            calculate();
+        });
+        $('clear').addEventListener('click', () => {
+            for (const id of ['astLevel', 'altLevel', 'ldhLevel']) $(id).value = '';
+            calculate();
+            $('astLevel').focus();
+        });
+        $('copy').addEventListener('click', async () => {
+            try { await navigator.clipboard.writeText(lastText); $('copy').textContent = 'Copied'; }
+            catch (e) { $('copy').textContent = 'Copy failed'; }
+            setTimeout(() => { $('copy').textContent = 'Copy table'; }, 1400);
+        });
+        calculate();
+    });
+</script>
 </body>
 </html>
