@@ -10,9 +10,15 @@ Key Features:
 *   **Date and Time Input:**  Specify when the current enzyme levels were measured.
 *   **Editable Half-Lives:**  Customize the half-lives of AST, ALT, and LDH, or use the default values.
 *   **Custom Time Steps:** Control how many time steps to go back, and how large each step is.
-*   **Table Output:**  View the historical enzyme estimates in a well organized table, with columns of Hours Ago, Date, Time, AST, ALT, and LDH
-*   **Responsive Design:**  The tool is designed to be usable on various screen sizes.
-*   **Collapsible Settings:** The default parameters for time and half life can be toggled.
+*   **Live results:** The chart and table update as you type; no Calculate button.
+*   **Chart:** The estimated levels on a log scale, where each enzyme is a straight line whose slope reflects its half-life.
+*   **Table Output:**  View the historical enzyme estimates in a table with Hours Ago, Date, Time, AST, ALT, and LDH, and copy it as text.
+*   **Responsive Design:**  Usable on phones, with a light and dark theme.
+*   **Collapsible Assumptions:** Half-lives, number of steps, and step size are under "Assumptions".
+
+The page shares its look with [qaddodi.github.io](https://qaddodi.github.io): it loads
+`/assets/tool.css` and `/assets/tool.js` from that site, so it must be served from the
+qaddodi.github.io domain (or a local server with that site at `/`) to be styled.
 
 ## Usage
 
@@ -21,7 +27,7 @@ Key Features:
     git clone https://github.com/qaddodi/liverenzymebacktrack
     ```
 
-2.  **Open `main.html`:** Open the `main.html` file in your web browser.
+2.  **Open it:** The live tool is at https://qaddodi.github.io/liverenzymebacktrack/. Opened straight from disk, `index.html` works but is unstyled.
 
 3.  **Input Data:**
     *   Enter the current date and time of the enzyme measurement.
