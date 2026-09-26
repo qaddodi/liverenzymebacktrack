@@ -305,17 +305,18 @@
         const shown = ENZ.filter((e) => data[e]);
         const all = shown.flatMap((e) => data[e]).filter((v) => v > 0);
         if (!all.length || timePoints.length < 2) return "";
-        // log scale: every enzyme is a straight line, with slope set by its half-life
-        let lo = Math.floor(Math.log10(Math.min(...all)));
-        let hi = Math.ceil(Math.log10(Math.max(...all)));
-        if (hi === lo) hi = lo + 1;
+        // linear scale, from zero to a round number above the highest value
+        const top = Math.max(...all);
+        const mag = 10 ** Math.floor(Math.log10(top));
+        const step = [1, 2, 2.5, 5, 10].map((m) => m * mag / 2).find((st) => top / st <= 5) || mag;
+        const yMax = Math.ceil(top / step) * step;
         const maxH = timePoints[timePoints.length - 1];
         const x = (h) => L + (W - L - R) * (1 - h / maxH);       // today on the right
-        const y = (v) => T + (H - T - B) * (1 - (Math.log10(Math.max(v, 10 ** lo)) - lo) / (hi - lo));
+        const y = (v) => T + (H - T - B) * (1 - v / yMax);
         let g = "";
-        for (let p = lo; p <= hi; p++) {
-            g += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(10 ** p)}" y2="${y(10 ** p)}"/>`;
-            g += `<text x="${L - 8}" y="${y(10 ** p) + 4}" text-anchor="end">${fmt(10 ** p)}</text>`;
+        for (let v = step; v <= yMax + step / 2; v += step) {
+            g += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/>`;
+            g += `<text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${fmt(v)}</text>`;
         }
         const ticks = [...new Set([0, Math.round(maxH / 2), maxH])];
         for (const h of ticks) g += `<text x="${x(h)}" y="${H - 8}" text-anchor="middle">${h ? `−${h} h` : "now"}</text>`;
@@ -327,12 +328,13 @@
             const k = e.toLowerCase();
             const pts = timePoints.map((h, i) => `${x(h).toFixed(1)},${y(data[e][i]).toFixed(1)}`).join(" ");
             g += `<polyline class="line l-${k}" points="${pts}"/>`;
+            for (let i = 1; i < timePoints.length - 1; i++) g += `<circle class="d-${k}" cx="${x(timePoints[i]).toFixed(1)}" cy="${y(data[e][i]).toFixed(1)}" r="1.8"/>`;
             g += `<circle class="d-${k}" cx="${x(0)}" cy="${y(data[e][0])}" r="4"/>`;
             const endY = ends.find((o) => o.e === e).y;
             g += `<circle class="d-${k}" cx="${x(maxH)}" cy="${y(data[e][data[e].length - 1])}" r="3"/>`;
-            g += `<text class="end t-${k}" x="${x(maxH) - 8}" y="${endY - 8}" text-anchor="start">${e}</text>`;
+            g += `<text class="end t-${k}" x="${x(maxH) + 7}" y="${endY - 6}" text-anchor="start">${e}</text>`;
         }
-        return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Estimated enzyme levels going back ${maxH} hours, on a log scale">${g}</svg>`;
+        return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Estimated enzyme levels going back ${maxH} hours">${g}</svg>`;
     }
 
     function calculate() {
@@ -372,7 +374,7 @@
         lastText = lines.join('\n');
 
         const chart = chartSVG(timePoints, data);
-        results.innerHTML = (chart ? `<div class="chart-wrap">${chart}<p class="chart-cap">Log scale: each line is straight, and steeper means a shorter half-life.</p></div>` : '') + tableHTML;
+        results.innerHTML = (chart ? `<div class="chart-wrap">${chart}<p class="chart-cap">Each enzyme rises going back in time; the shorter its half-life, the faster it climbs.</p></div>` : '') + tableHTML;
         $('copy').hidden = false;
     }
 

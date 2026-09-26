@@ -11,7 +11,7 @@ Key Features:
 *   **Editable Half-Lives:**  Customize the half-lives of AST, ALT, and LDH, or use the default values.
 *   **Custom Time Steps:** Control how many time steps to go back, and how large each step is.
 *   **Live results:** The chart and table update as you type; no Calculate button.
-*   **Chart:** The estimated levels on a log scale, where each enzyme is a straight line whose slope reflects its half-life.
+*   **Chart:** The estimated levels over time; the shorter an enzyme's half-life, the faster it climbs going back.
 *   **Table Output:**  View the historical enzyme estimates in a table with Hours Ago, Date, Time, AST, ALT, and LDH, and copy it as text.
 *   **Responsive Design:**  Usable on phones, with a light and dark theme.
 *   **Collapsible Assumptions:** Half-lives, number of steps, and step size are under "Assumptions".
