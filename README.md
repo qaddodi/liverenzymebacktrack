@@ -83,13 +83,6 @@ The program will produce an output table showing estimated enzyme values at thre
 
 Contributions are welcome! If you have any ideas for improvements, bug fixes, or new features, feel free to submit a pull request.
 
-## License
+## Copyright
 
-[Add your license type here, if any (e.g., MIT License)]
-
-## Issues
-
-If you encounter any problems, please feel free to open an issue on the GitHub repository.
-
-## Author
-Mohammad Almeqdadi, MD
+© 2026 Mohammad Almeqdadi. All rights reserved.
